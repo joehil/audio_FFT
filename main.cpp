@@ -295,7 +295,8 @@ void setup_wifi_local() {
     Serial.print(".");
     loopcnt++;
     if (loopcnt > 20){
-      ESP.restart();
+      esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR); //stellt den Timer 5min
+      esp_deep_sleep_start(); //Gute Nacht!
     }
   }
 
@@ -320,9 +321,10 @@ void reconnect() {
     } else {
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 5 seconds");
-      // Wait 5 seconds before retrying
-      delay(5000);
+      Serial.println(" try again in 5 minutes");
+      // Wait 5 minutes before retrying
+      esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR); //stellt den Timer 5min
+      esp_deep_sleep_start(); //Gute Nacht!
     }
   }
 }
