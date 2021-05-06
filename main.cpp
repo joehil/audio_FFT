@@ -17,6 +17,8 @@ float sine(int i);
 void callback(char* topic, byte* payload, unsigned int length);
 void setup_wifi_local(void);
 void reconnect(void);
+void eventWiFi(WiFiEvent_t event);
+
 
 //Example data:
 int data[256]={};
@@ -288,6 +290,7 @@ void setup_wifi_local() {
   Serial.println(ssid);
 
   WiFi.setAutoReconnect(true);
+  WiFi.onEvent(eventWiFi); 
   WiFi.begin(ssid, password);
 
   while (WiFi.status() != WL_CONNECTED) {
@@ -314,17 +317,54 @@ void callback(char* topic, byte* payload, unsigned int length) {
 
 void reconnect() {
   // Loop until we're reconnected
+  int n=0;
   while (!client.connected()) {
     Serial.print("Attempting MQTT connection...");
     if (client.connect(clientId)) {
       Serial.println("connected");
     } else {
+      n++;
       Serial.print("failed, rc=");
       Serial.print(client.state());
-      Serial.println(" try again in 5 minutes");
-      // Wait 5 minutes before retrying
+      if (n>20){
+        Serial.println(" try again in 5 minutes");
+        // Wait 5 minutes before retrying
+        esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR); //stellt den Timer 5min
+        esp_deep_sleep_start(); //Gute Nacht!
+      }
+      delay(500);
+    }
+  }
+}
+
+/********************************************************
+/*  Handle WiFi events                                  *
+/********************************************************/
+void eventWiFi(WiFiEvent_t event) {
+     
+  switch(event) {
+    case SYSTEM_EVENT_STA_DISCONNECTED:
+      Serial.println("EV2");
+      esp_sleep_enable_timer_wakeup(120 * uS_TO_S_FACTOR); //stellt den Timer 2min
+      esp_deep_sleep_start(); //Gute Nacht!
+    break;
+    
+    case SYSTEM_EVENT_STA_WPS_ER_TIMEOUT:
+      Serial.println("EV5");
+      esp_sleep_enable_timer_wakeup(120 * uS_TO_S_FACTOR); //stellt den Timer 2min
+      esp_deep_sleep_start(); //Gute Nacht!
+    break;
+    
+    case SYSTEM_EVENT_AP_STADISCONNECTED:
+      Serial.println("EV6");
+      esp_sleep_enable_timer_wakeup(120 * uS_TO_S_FACTOR); //stellt den Timer 2min
+      esp_deep_sleep_start(); //Gute Nacht!
+    break;    
+    
+    case SYSTEM_EVENT_STA_LOST_IP:
+      Serial.println("EV7");
       esp_sleep_enable_timer_wakeup(300 * uS_TO_S_FACTOR); //stellt den Timer 5min
       esp_deep_sleep_start(); //Gute Nacht!
-    }
+    break;    
   }
 }
