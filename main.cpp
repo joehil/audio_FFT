@@ -21,7 +21,7 @@ void eventWiFi(WiFiEvent_t event);
 
 
 //Example data:
-int data[256]={};
+int data[512]={};
 
 char timestring[50];
 char msg[50];
@@ -47,7 +47,7 @@ byte sine_data [91]=
 241,  243,  244,  245,  246,  247,  248,  249,  250,  251,  
 252,  253,  253,  254,  254,  254,  255,  255,  255,  255
   };
-float f_peaks[5]; // top 5 frequencies peaks in descending order
+float f_peaks[7]; // top 7 frequencies peaks in descending order
 //---------------------------------------------------------------------------//
 
 
@@ -60,11 +60,6 @@ void setup()
         client.setServer(mqtt_server, 1883);
         client.setCallback(callback);
 
-        for (int i=0;i<256;i++){
-          data[i]=analogRead(34);
-          delay(1);
-        }
-
         if (!client.connected()) {
           reconnect();
         }
@@ -73,12 +68,12 @@ void setup()
         strcat(msg,"/outTopic/IP");
         client.publish(msg, WiFi.localIP().toString().c_str());
 
-        for (int i=0;i<10;i++){
-          for (int j=0;j<256;j++){
+        for (int i=0;i<3;i++){
+          for (int j=0;j<512;j++){
             data[j]=analogRead(34);
             delay(1);
           }
-          FFT(data,256,400);        //to get top five value of frequencies of X having 64 sample at 100Hz sampling
+          FFT(data,512,400);        //to get top five value of frequencies of X having 64 sample at 100Hz sampling
 /*        Serial.println(f_peaks[0]);
         Serial.println(f_peaks[1]);
         Serial.println(f_peaks[2]);
@@ -88,7 +83,8 @@ void setup()
 
           strcpy(msg,clientId);
           strcat(msg,"/outTopic/FFTvalues");
-          sprintf(fvalue,"%f;%f,%f;%f;%f",f_peaks[0],f_peaks[1],f_peaks[2],f_peaks[3],f_peaks[4]);
+          sprintf(fvalue,"%f;%f,%f;%f;%f;%f;%f",f_peaks[0],f_peaks[1],f_peaks[2],
+                  f_peaks[3],f_peaks[4],f_peaks[5],f_peaks[6]);
           client.publish(msg, fvalue);
           delay(1000);
         }
@@ -243,7 +239,7 @@ c=0;
 
 
 
-    for(int i=0;i<5;i++)     // updating f_peak array (global variable)with descending order
+    for(int i=0;i<7;i++)     // updating f_peak array (global variable)with descending order
     {
     f_peaks[i]=out_im[in_ps[i]];
     }
