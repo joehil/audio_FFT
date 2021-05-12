@@ -20,7 +20,6 @@ void reconnect(void);
 void eventWiFi(WiFiEvent_t event);
 
 
-//Example data:
 int data[512]={};
 
 char timestring[50];
@@ -28,6 +27,7 @@ char msg[50];
 char fvalue[100];
 long lastMsg = 0;
 unsigned int cnt = 0;
+unsigned int timespan=0;
 char buf [5];
 
 WiFiClient espClient;
@@ -53,8 +53,14 @@ float f_peaks[7]; // top 7 frequencies peaks in descending order
 
 void setup() 
         {
+        timespan=millis();
         Serial.begin(9600);
         delay(500);
+
+        ledcSetup(0, 5000, 8);
+
+        ledcAttachPin(2,0);
+        ledcWrite(0, 10);
 
         setup_wifi_local();
         client.setServer(mqtt_server, 1883);
@@ -72,14 +78,9 @@ void setup()
           for (int j=0;j<512;j++){
             data[j]=analogRead(34);
             delay(1);
+  //          Serial.println(data[j]);
           }
           FFT(data,512,400);        //to get top five value of frequencies of X having 64 sample at 100Hz sampling
-/*        Serial.println(f_peaks[0]);
-        Serial.println(f_peaks[1]);
-        Serial.println(f_peaks[2]);
-        Serial.println(f_peaks[3]);
-        Serial.println(f_peaks[4]);
-        Serial.println("=========================================");  */
 
           strcpy(msg,clientId);
           strcat(msg,"/outTopic/FFTvalues");
@@ -88,6 +89,12 @@ void setup()
           client.publish(msg, fvalue);
           delay(1000);
         }
+        timespan=millis()-timespan;
+        strcpy(msg,clientId);
+        strcat(msg,"/outTopic/timespan");
+        sprintf(fvalue,"%d",timespan);
+        client.publish(msg, fvalue);
+        Serial.println(fvalue);
 
         esp_sleep_enable_timer_wakeup(TIME_TO_SLEEP * uS_TO_S_FACTOR); //stellt den Timer
         esp_deep_sleep_start(); //Gute Nacht!
